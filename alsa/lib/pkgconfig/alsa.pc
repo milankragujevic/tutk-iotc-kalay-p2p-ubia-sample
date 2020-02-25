@@ -1,0 +1,14 @@
+prefix=/root/alsa-1.0.14/
+exec_prefix=/root/alsa-1.0.14/
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: alsa
+Description: Advanced Linux Sound Architecture (ALSA) - Library
+Version: 1.0.14
+Requires: 
+Libs: -L${libdir} -lasound
+Libs.private: -lm -ldl -lpthread
+# -I${includedir}/alsa below is just for backward compatibility
+# (it was set so mistakely in the older version)
+Cflags: -I${includedir} -I${includedir}/alsa

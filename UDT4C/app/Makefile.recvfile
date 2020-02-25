@@ -1,0 +1,44 @@
+C = gcc
+
+ifndef os
+   os = LINUX
+endif
+
+ifndef arch
+   arch = IA32
+endif
+
+CFLAGS = -Wall -D$(os) -I../src -finline-functions -O3
+
+ifeq ($(arch), IA32)
+   CCFLAGS += -DIA32 #-mcpu=pentiumpro -march=pentiumpro -mmmx -msse
+endif
+
+ifeq ($(arch), IA64)
+   CCFLAGS += -DIA64
+endif
+
+LDFLAGS = -L../src -ludtc -lpthread 
+
+ifeq ($(os), UNIX)
+   LDFLAGS += -lsocket
+endif
+
+
+DIR = $(shell pwd)
+
+APP = recvfile 
+
+all: $(APP)
+
+%.o: %.c
+	$(C) $(CFLAGS) $< -c
+
+recvfile: recvfile.o
+	$(C) $^ -o $@ $(LDFLAGS)
+
+clean:
+	rm -f *.o $(APP)
+
+install:
+	export PATH=$(DIR):$$PATH

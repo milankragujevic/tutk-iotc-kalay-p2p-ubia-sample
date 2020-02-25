@@ -1,0 +1,1 @@
+将usbaudio.c拷贝到/root/m3s_tj_sdk/source/linux2.6.21.x/sound/usb/usbaudio.c

@@ -1,0 +1,83 @@
+#!/usr/bin/python
+# -*- coding:utf-8 -*-
+import os, sys, threading, re
+
+class R():
+    def __init__(self):
+        pass
+    subMakefile = '''all:
+\t$(CC) $(CFLAGS) $(INC) -c *.c $(LIBS)
+clean:
+\trm -f *.o
+'''
+    supMakefile = '''all:
+\t$(SUBMAKE)
+\t$(CC) $(CFLAGS) $(INC) -c *.c $(LIBS)
+\t$(CC) -o $(APP) *.o $(SUBOBJS) $(LIBS)
+clean:
+\trm -f *.o
+'''
+
+class MakeTool(threading.Thread):
+    def __init__(self, app = "hello", dir = "."):
+        threading.Thread.__init__(self)
+        self.dir = dir
+        self.app = app
+    def hasCFile(self, dirName):
+        r = re.compile(".*.c")
+        for fileName in os.listdir(dirName):
+            m = r.search(fileName)
+            if m:
+                return True
+        return False
+    def run(self):
+        predef = "export CC=gcc\n"
+        predef = "export CC=mipsel-linux-gcc\n"
+        predef += "export MAKE=make -w\n"
+        predef += "export INC=-I. -I.. -I/root/RT288x_SDK/source/user/openssl-0.9.8e/include\n"
+        #predef += "export INC=-I. -I..\n"
+        predef += "APP=" + self.app + "\n"
+        #predef += "OLIB=lib" + self.app + ".so\n"
+        predef += "CFLAGS=-D_TEST\n"
+        predef += "LIBS=-L/root/RT288x_SDK/source/romfs/lib -lpthread -lssl -lcrypto\n"
+        #predef += "LIBS=-lpthread -lssl -lcrypto\n"
+        subObjs = "SUBOBJS="
+        subMakeAll = "SUBMAKE="
+        subClean = ""
+        if not os.path.isdir(self.dir):
+            return
+        for fileName in os.listdir(self.dir):
+            if os.path.isdir(self.dir + "/" + fileName) and self.hasCFile(self.dir + "/" + fileName) > 0:
+                subObjs += fileName + "/*.o "
+                subMakeAll += "\t$(MAKE) -C " + fileName + "\n"
+                subClean += "\t$(MAKE) -C " + fileName + " clean\n"
+                file = open(self.dir + "/" + fileName + "/Makefile", "w")
+                file.write(R.subMakefile)
+                file.close()
+                print fileName
+        file = open(self.dir + "/Makefile", "w")
+        file.write(predef + subObjs + "\n" + subMakeAll + "\n" + R.supMakefile + subClean)
+        file.close()
+
+def help():
+    s = '''
+python autoconfig.py [app [path]]
+'''
+    print s
+
+def main(argv):
+    if len(argv) == 1:
+        tool = MakeTool("hello", ".")
+        tool.run()
+    elif len(argv) == 2:
+        tool = MakeTool(argv[1], ".")
+        tool.run()
+    elif len(argv) == 3:
+        tool = MakeTool(argv[1], argv[2])
+        tool.run()
+    else:
+        help()
+    os.system("kill -9 " + str(os.getpid())) #杀掉进程
+
+if __name__ == "__main__":
+    main(sys.argv)

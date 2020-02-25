@@ -1,0 +1,4 @@
+firmware=1.0.0.0
+camera_type=CM1
+hardware=1.0.0.1
+camera_model=M3S
